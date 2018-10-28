@@ -1,0 +1,37 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/lib/com.google.android.gms.plus"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/record_frag"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Record">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:orientation="horizontal">
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/record_button"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_weight="1"
+            android:drawableTop="@drawable/baseline_record_voice_over_black_24dp"
+            android:text="Record"
+            android:textAlignment="center"
+            android:textSize="16sp" />
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/play_button"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+
+            android:layout_weight="1"
+            android:drawableTop="@drawable/baseline_play_arrow_black_24dp"
+            android:text="Play"
+            android:textAlignment="center"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+</RelativeLayout>
