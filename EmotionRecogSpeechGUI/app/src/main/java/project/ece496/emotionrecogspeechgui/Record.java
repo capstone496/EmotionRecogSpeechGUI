@@ -11,18 +11,38 @@ import android.view.ViewGroup;
 import android.util.Log;
 import java.io.IOException;
 import java.lang.String;
-import project.ece496.emotionrecogspeechgui.RecorderActivity;
-import project.ece496.emotionrecogspeechgui.AudioRecorder;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
+import android.widget.ImageView;
+import android.widget.Toast;
+
+import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.storage.FileDownloadTask;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnPausedListener;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageException;
+import com.google.firebase.storage.StorageMetadata;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.UUID;
 
 
-/**
- * A fragment with a Google +1 button.
- * Activities that contain this fragment must implement the
- * {@link Record.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link Record#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class Record extends Fragment {
     private static final String LOG_TAG = "AudioRecordTest";
     // TODO: Rename parameter arguments, choose names that match
@@ -38,12 +58,18 @@ public class Record extends Fragment {
     private String mParam2;
     private AppCompatButton mRecordButton;
     private AppCompatButton mPlayButton;
+    private AppCompatButton mUploadButton;
     private AudioRecorder mRecorder = null;
     private MediaPlayer mPlayer = null;
     private static String mFileName = null;
     boolean mStartPlaying = true;
     boolean mStartRecording = true;
     private MainActivity main;
+    private Uri file;
+    private StorageMetadata metadata;
+    private FirebaseStorage storage;
+    private StorageReference riversRef, storageRef;
+    private UploadTask uploadTask;
 
     //private OnFragmentInteractionListener mListener;
 
@@ -51,15 +77,7 @@ public class Record extends Fragment {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment Record.
-     */
-    // TODO: Rename and change types and number of parameters
+
 /*
     public static Record newInstance(String param1, String param2) {
         Record fragment = new Record();
@@ -88,6 +106,16 @@ public class Record extends Fragment {
 
     private void startPlaying() {
         mPlayer = new MediaPlayer();
+        mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+
+            public void onCompletion(MediaPlayer mp) {
+                mPlayer.release();
+                mPlayer = null;
+                mPlayButton.setText("Play");
+                mRecordButton.setEnabled(true);
+                mStartPlaying = !mStartPlaying;
+            }
+        });
         try {
             mPlayer.setDataSource(mFileName);
             mPlayer.prepare();
@@ -103,6 +131,8 @@ public class Record extends Fragment {
     }
 
     private void startRecording() {
+        mFileName = getActivity().getExternalCacheDir().getAbsolutePath();
+        mFileName += UUID.randomUUID().toString();
         mRecorder = new AudioRecorder(mFileName, main);
         mRecorder.startRecording();
     }
@@ -111,49 +141,46 @@ public class Record extends Fragment {
         mRecorder.stopRecording();
         mRecorder = null;
     }
-/*
-    class RecordButton extends AppCompatButton {
-        boolean mStartRecording = true;
 
-        OnClickListener clicker = new OnClickListener() {
-            public void onClick(View v) {
-                onRecord(mStartRecording);
+    private void uploadRecording(){
+        file = Uri.fromFile(new File(mFileName));
+        storageRef = storage.getReference();
+        riversRef  = storageRef.child("audio/"+file.getLastPathSegment());
+        uploadTask = riversRef.putFile(file);
 
-                mStartRecording = !mStartRecording;
+        uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                System.out.println("Upload is " + progress + "% done");
             }
-        };
-
-        public RecordButton(Context ctx) {
-            super(ctx);
-            setText("Start recording");
-            setOnClickListener(clicker);
-        }
-    }
-
-    class PlayButton extends AppCompatButton {
-        boolean mStartPlaying = true;
-
-        OnClickListener clicker = new OnClickListener() {
-            public void onClick(View v) {
-                onPlay(mStartPlaying);
-                mStartPlaying = !mStartPlaying;
+        }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
+                System.out.println("Upload is paused");
             }
-        };
-
-        public PlayButton(Context ctx) {
-            super(ctx);
-            setText("Start playing");
-            setOnClickListener(clicker);
-        }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                System.out.println("Upload failed");
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                // Handle successful uploads on complete
+                System.out.println("Upload is successful");
+            }
+        });
     }
-*/
-    @Override
+@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         main = (MainActivity)getActivity();
 
-        mFileName = getActivity().getExternalCacheDir().getAbsolutePath();
-        mFileName += "/test.wav";
+
+        storage = FirebaseStorage.getInstance();
+
+
     }
 
     @Override
@@ -163,6 +190,7 @@ public class Record extends Fragment {
         View view = inflater.inflate(R.layout.fragment_record, container, false);
         mRecordButton = (AppCompatButton) view.findViewById(R.id.record_button);
         mPlayButton = (AppCompatButton) view.findViewById(R.id.play_button);
+        mUploadButton = (AppCompatButton) view.findViewById(R.id.upload_button);
 
         mRecordButton.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -171,8 +199,11 @@ public class Record extends Fragment {
                 onRecord(mStartRecording);
                 if (mStartRecording) {
                     mRecordButton.setText("Stop");
+                    mPlayButton.setEnabled(false);
+
                 } else {
                     mRecordButton.setText("Record");
+                    mPlayButton.setEnabled(true);
                 }
                 mStartRecording = !mStartRecording;
             }
@@ -185,65 +216,25 @@ public class Record extends Fragment {
                 onPlay(mStartPlaying);
                 if (mStartPlaying) {
                     mPlayButton.setText("Stop");
+                    mRecordButton.setEnabled(false);
                 } else {
                     mPlayButton.setText("Play");
+                    mRecordButton.setEnabled(true);
                 }
                 mStartPlaying = !mStartPlaying;
 
             }
         });
 
-        //Find the +1 button
-        //mPlusOneButton = (PlusOneButton) view.findViewById(R.id.plus_one_button);
+        mUploadButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                //call playing api
+                uploadRecording();
+            }
+        });
 
         return view;
     }
-
-/*    @Override
-    public void onResume() {
-        super.onResume();
-
-        // Refresh the state of the +1 button each time the activity receives focus.
-        mPlusOneButton.initialize(PLUS_ONE_URL, PLUS_ONE_REQUEST_CODE);
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
-    *//**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     *//*
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
-    }*/
 
 }
