@@ -1,9 +1,15 @@
 package project.ece496.emotionrecogspeechgui;
 
 
+import android.content.Intent;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.AppCompatTextView;
 import android.view.LayoutInflater;
 import android.support.v7.widget.AppCompatButton;
 import android.view.View;
@@ -26,6 +32,11 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnPausedListener;
@@ -40,7 +51,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.UUID;
+
+import static android.app.Activity.RESULT_OK;
 
 
 public class Record extends Fragment {
@@ -56,21 +71,22 @@ public class Record extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
-    private AppCompatButton mRecordButton;
-    private AppCompatButton mPlayButton;
-    private AppCompatButton mUploadButton;
+    private AppCompatButton mRecordButton, mPlayButton, mUploadButton, mAnalyzeButton;
+    private AppCompatTextView mResultView;
     private AudioRecorder mRecorder = null;
     private MediaPlayer mPlayer = null;
     private static String mFileName = null;
-    boolean mStartPlaying = true;
-    boolean mStartRecording = true;
+    boolean mStartPlaying = true, mStartRecording = true;
     private MainActivity main;
     private Uri file;
-    private StorageMetadata metadata;
     private FirebaseStorage storage;
     private StorageReference riversRef, storageRef;
     private UploadTask uploadTask;
-
+    // Get a reference to our posts
+    private FirebaseDatabase database;
+    private DatabaseReference ref;
+    private SpeechRecognizer speech;
+    private WatsonSpeechTranscriber transcriber;
     //private OnFragmentInteractionListener mListener;
 
     public Record() {
@@ -131,8 +147,19 @@ public class Record extends Fragment {
     }
 
     private void startRecording() {
+
+        /*
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en");
+
+        speech.startListening(intent);
+        if(intent.resolveActivity(getActivity().getPackageManager()) != null) {
+            startActivityForResult(intent, 10);
+        }*/
         mFileName = getActivity().getExternalCacheDir().getAbsolutePath();
         mFileName += UUID.randomUUID().toString();
+
         mRecorder = new AudioRecorder(mFileName, main);
         mRecorder.startRecording();
     }
@@ -140,6 +167,9 @@ public class Record extends Fragment {
     private void stopRecording() {
         mRecorder.stopRecording();
         mRecorder = null;
+
+        new TranscriptionTask().execute(new File(mFileName));
+        Log.d("Stop recording", "trying to transcribe");
     }
 
     private void uploadRecording(){
@@ -168,18 +198,91 @@ public class Record extends Fragment {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 // Handle successful uploads on complete
+                mUploadButton.setText("Upload Success");
                 System.out.println("Upload is successful");
             }
         });
     }
+
+    class TranscriptionTask extends AsyncTask<File, Void, String> {
+
+        @Override
+
+        protected String doInBackground(File... files) {
+
+            transcriber = new WatsonSpeechTranscriber();
+
+            return transcriber.transcribe(files[0]);
+
+        }
+
+
+
+        @Override
+
+        protected void onPostExecute(String s) {
+
+            // TODO: spaghetti code here...
+            mResultView.setText(s);
+
+        }
+
+    }
+
+/*
+    private void analyzeRecording() {
+        // Attach a listener to read the data at our posts reference
+        ref.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                EmotionResult emotionResult = dataSnapshot.getValue(EmotionResult.class);
+                String emoStr = "";
+                int max = 0;
+                for(int i = 1; i < emotionResult.emotion.length; i ++) {
+                    if (emotionResult.emotion[max] < emotionResult.emotion[i]) {
+                        max = i;
+                    }
+                }
+                switch (max) {
+                    case 0:
+                        emoStr = "happy";
+                        break;
+                    case 1:
+                        emoStr = "sad";
+                        break;
+                    case 2:
+                        emoStr = "angry";
+                        break;
+                    case 3:
+                        emoStr = "fearful";
+                        break;
+                    case 4:
+                        emoStr = "disgust";
+                        break;
+                    case 5:
+                        emoStr = "surprise";
+                        break;
+                    default:
+                        break;
+                }
+                mResultView.setText("Result:\n"+emoStr);
+                //System.out.println(emotionResult);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                //System.out.println("The read failed: " + databaseError.getCode());
+            }
+        });
+    }*/
 @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         main = (MainActivity)getActivity();
-
-
         storage = FirebaseStorage.getInstance();
-
+        speech = SpeechRecognizer.createSpeechRecognizer(getActivity());
+        //database = FirebaseDatabase.getInstance();
+        //ref = database.getReference("/results/emotionResult");
 
     }
 
@@ -191,6 +294,9 @@ public class Record extends Fragment {
         mRecordButton = (AppCompatButton) view.findViewById(R.id.record_button);
         mPlayButton = (AppCompatButton) view.findViewById(R.id.play_button);
         mUploadButton = (AppCompatButton) view.findViewById(R.id.upload_button);
+        mAnalyzeButton = (AppCompatButton) view.findViewById(R.id.analyze_button);
+        mResultView = (AppCompatTextView) view.findViewById(R.id.display);
+
 
         mRecordButton.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -205,6 +311,8 @@ public class Record extends Fragment {
                     mRecordButton.setText("Record");
                     mPlayButton.setEnabled(true);
                 }
+
+                mUploadButton.setText("UPLOAD");
                 mStartRecording = !mStartRecording;
             }
         });
@@ -233,6 +341,17 @@ public class Record extends Fragment {
                 uploadRecording();
             }
         });
+
+
+/*
+        mAnalyzeButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                //call playing api
+                analyzeRecording();
+            }
+        });
+*/
 
         return view;
     }
