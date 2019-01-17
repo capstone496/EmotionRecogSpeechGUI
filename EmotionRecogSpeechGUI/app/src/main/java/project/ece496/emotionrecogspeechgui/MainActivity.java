@@ -59,7 +59,7 @@ public class MainActivity extends RecorderActivity {
     private DataInputStream dataInputStream = null;
     private DataOutputStream dataOutputStream = null;
     private String transcribedText;
-
+    private String emotionResult;
     private void onRecord(boolean start) {
         if (start) {
             startRecording();
@@ -135,41 +135,57 @@ public class MainActivity extends RecorderActivity {
             public void run() {
                 try
                 {
-                    client = new Socket("192.168.1.109", 5000); //connect to server
+                    client = new Socket("100.65.202.107", 5000); //connect to server
                     dataOutputStream = new DataOutputStream(client.getOutputStream());
                     dataInputStream = new DataInputStream(client.getInputStream());
-
+                    String s;
                     while (transcribedText == null) {
                     }
-                    byte[] received = new byte[1024];
+                    byte[] received = new byte[2];
                     dataOutputStream.writeBytes("2");
                     dataOutputStream.flush();
-                    while (dataInputStream.read(received) == -1) {
+
+                    while (dataInputStream.read(received) == -1){
                     }
+                    s = new String(received);
+                    System.out.println(s);
+
                     dataOutputStream.writeUTF(transcribedText+ "\n");
                     dataOutputStream.flush();
 
                     while (dataInputStream.read(received) == -1) {
                     }
+                    s = new String(received);
+                    System.out.println(s);
 
                     if(file.isFile()) {
                         dataOutputStream.writeBytes("1");
                         dataOutputStream.flush();
+
                         while (dataInputStream.read(received) == -1) {
                         }
+                        s = new String(received);
+                        System.out.println(s);
+
                         FileInputStream fileInputStream = new FileInputStream(file);
                         byte[] buf = new byte[1024];
                         int readSuccess = fileInputStream.read(buf,0,1024);
+
                         while(readSuccess != -1) {
                             dataOutputStream.write(buf, 0, 1024);
                             dataOutputStream.flush();
                             readSuccess = fileInputStream.read(buf,0,1024);
                         }
+
+                        /*
+                        while (dataInputStream.read(received) == -1) {
+                        }
+                        s = new String(received);
+                        System.out.println(s);
+                        */
                         fileInputStream.close();
                     }
-                    /*
-                    while (dataInputStream.read(received) == -1) {
-                    }*/
+
                     mUploadButton.setText("Upload Success");
                     dataOutputStream.close();
                     dataInputStream.close();
@@ -181,6 +197,40 @@ public class MainActivity extends RecorderActivity {
                 }
             }
         }).start();
+    }
+
+    private void analyzeRecording() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    client = new Socket("100.65.202.107", 5000); //connect to server
+                    dataInputStream = new DataInputStream(client.getInputStream());
+                    byte[] received = new byte[1024];
+
+                    while (dataInputStream.read(received) == -1) {
+                    }
+                    emotionResult = new String(received);
+                    for (int i = 0; i < 1024; i ++) {
+                        if (emotionResult.charAt(i) == '.') {
+                            emotionResult = emotionResult.substring(0, i);
+                            break;
+                        }
+                    }
+                    System.out.println(emotionResult);
+                } catch (UnknownHostException e){
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                mResultView.append("\nResult:" + emotionResult);
+
+            }
+
+        }).start();
+
+
+            //System.out.println(emotionResult);
     }
 
     class TranscriptionTask extends AsyncTask<File, Void, String> {
@@ -215,6 +265,18 @@ public class MainActivity extends RecorderActivity {
         mAnalyzeButton = (AppCompatButton) findViewById(R.id.analyze_button);
         mResultView = (AppCompatTextView) findViewById(R.id.display);
 
+/*      new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    client = new Socket("100.65.202.107", 5000);
+                } catch (UnknownHostException e){
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();*/
         mRecordButton.setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View v) {
@@ -258,6 +320,12 @@ public class MainActivity extends RecorderActivity {
                     uploadRecording();
                 }
             });
+        mAnalyzeButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                analyzeRecording();
+            }
+        });
 
         /*
         mMainNav = (BottomNavigationView) findViewById(R.id.main_nav);
