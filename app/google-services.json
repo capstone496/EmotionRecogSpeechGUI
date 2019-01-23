@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "120041420595",
+    "firebase_url": "https://speech2emotion.firebaseio.com",
+    "project_id": "speech2emotion",
+    "storage_bucket": "speech2emotion.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:120041420595:android:7976ed1f91fd5479",
+        "android_client_info": {
+          "package_name": "project.ece496.emotionrecogspeechgui"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "120041420595-b4o47b5r1jjlqbedjodp3c1ou2ul07nq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "project.ece496.emotionrecogspeechgui",
+            "certificate_hash": "fc2887df4a6e76825b6450c814196e6df0fc896a"
+          }
+        },
+        {
+          "client_id": "120041420595-7upf2egnkb2gnlhilan78vltuulll7n0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBraGmVa8Y-wWyLGcqT83GQo3cPbgZu7-c"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "120041420595-7upf2egnkb2gnlhilan78vltuulll7n0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

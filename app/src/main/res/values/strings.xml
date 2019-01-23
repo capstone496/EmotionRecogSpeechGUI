@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">emotion_recog_GUI</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_new_audio">New Audio</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="project_title">ECE496 Emotion Recognition</string>
+</resources>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/Emo_Recog_Home"
+        android:icon="@drawable/baseline_home_black_24dp"
+        android:title="@string/nav_home" />
+    <item
+        android:id="@+id/Emo_Recog_New_Audio"
+        android:icon="@drawable/baseline_audiotrack_black_24dp"
+        android:title="@string/nav_new_audio" />
+</menu>
