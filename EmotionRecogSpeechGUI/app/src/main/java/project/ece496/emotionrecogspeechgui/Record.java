@@ -15,6 +15,9 @@ import android.support.v7.widget.AppCompatButton;
 import android.view.View;
 import android.view.ViewGroup;
 import android.util.Log;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.String;
 import android.graphics.Bitmap;
@@ -51,6 +54,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
@@ -76,9 +81,9 @@ public class Record extends Fragment {
     private AudioRecorder mRecorder = null;
     private MediaPlayer mPlayer = null;
     private static String mFileName = null;
-    boolean mStartPlaying = true, mStartRecording = true;
+    boolean mStartPlaying = true, mStartRecording = true, mUploadSuccess = false;
     private MainActivity main;
-    private Uri file;
+    private File file;
     private FirebaseStorage storage;
     private StorageReference riversRef, storageRef;
     private UploadTask uploadTask;
@@ -87,23 +92,17 @@ public class Record extends Fragment {
     private DatabaseReference ref;
     private SpeechRecognizer speech;
     private WatsonSpeechTranscriber transcriber;
+    private Socket client;
+    private DataInputStream dataInputStream = null;
+    private DataOutputStream dataOutputStream = null;
+    private String transcribedText;
+    private String emotionResult;
     //private OnFragmentInteractionListener mListener;
 
     public Record() {
         // Required empty public constructor
     }
 
-
-/*
-    public static Record newInstance(String param1, String param2) {
-        Record fragment = new Record();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-*/
     private void onRecord(boolean start) {
         if (start) {
             startRecording();
@@ -147,19 +146,8 @@ public class Record extends Fragment {
     }
 
     private void startRecording() {
-
-        /*
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en");
-
-        speech.startListening(intent);
-        if(intent.resolveActivity(getActivity().getPackageManager()) != null) {
-            startActivityForResult(intent, 10);
-        }*/
         mFileName = getActivity().getExternalCacheDir().getAbsolutePath();
         mFileName += UUID.randomUUID().toString();
-
         mRecorder = new AudioRecorder(mFileName, main);
         mRecorder.startRecording();
     }
@@ -168,40 +156,112 @@ public class Record extends Fragment {
         mRecorder.stopRecording();
         mRecorder = null;
 
-        new TranscriptionTask().execute(new File(mFileName));
+        transcribedText = null;
+        transcriber = new WatsonSpeechTranscriber();
+        //new TranscriptionTask().execute(new File(mFileName));
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                transcribedText =  transcriber.transcribe(new File(mFileName));
+            }
+        }).start();
+
         Log.d("Stop recording", "trying to transcribe");
+    }
+    private void analyzeRecording() {
+        emotionResult= null;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    client = new Socket("100.65.194.121", 7012); //connect to server
+                    dataInputStream = new DataInputStream(client.getInputStream());
+                    byte[] received = new byte[1024];
+                    while (dataInputStream.read(received) == -1) {
+
+                    }
+                    emotionResult = new String(received);
+                    for (int i = 0; i < 1024; i ++) {
+                        if (emotionResult.charAt(i) == '.') {
+                            emotionResult = emotionResult.substring(0, i);
+                            break;
+                        }
+                    }
+                    System.out.println(emotionResult);
+                } catch (UnknownHostException e){
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }).start();
+
+        //System.out.println(emotionResult);
+
     }
 
     private void uploadRecording(){
-        file = Uri.fromFile(new File(mFileName));
-        storageRef = storage.getReference();
-        riversRef  = storageRef.child("audio/"+file.getLastPathSegment());
-        uploadTask = riversRef.putFile(file);
+        file = new File(mFileName);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try
+                {
+                    client = new Socket("100.65.194.121", 7012); //connect to server
+                    dataOutputStream = new DataOutputStream(client.getOutputStream());
+                    dataInputStream = new DataInputStream(client.getInputStream());
+                    String s;
+                    while (transcribedText == null) {
+                    }
+                    byte[] received = new byte[2];
+                    dataOutputStream.writeBytes("2");
+                    dataOutputStream.flush();
 
-        uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-                System.out.println("Upload is " + progress + "% done");
+                    while (dataInputStream.read(received) == -1){
+                    }
+                    s = new String(received);
+                    System.out.println(s);
+
+                    dataOutputStream.writeUTF(transcribedText+ "\n");
+                    dataOutputStream.flush();
+
+                    while (dataInputStream.read(received) == -1) {
+                    }
+                    s = new String(received);
+                    System.out.println(s);
+
+                    if(file.isFile()) {
+                        dataOutputStream.writeBytes("1");
+                        dataOutputStream.flush();
+
+                        while (dataInputStream.read(received) == -1) {
+                        }
+                        s = new String(received);
+                        System.out.println(s);
+
+                        FileInputStream fileInputStream = new FileInputStream(file);
+                        byte[] buf = new byte[1024];
+                        int readSuccess = fileInputStream.read(buf,0,1024);
+
+                        while(readSuccess != -1) {
+                            dataOutputStream.write(buf, 0, 1024);
+                            dataOutputStream.flush();
+                            readSuccess = fileInputStream.read(buf,0,1024);
+                        }
+                        fileInputStream.close();
+                    }
+                    mUploadSuccess = true;
+                    dataOutputStream.close();
+                    dataInputStream.close();
+                    client.close();
+                } catch (UnknownHostException e){
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-        }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
-                System.out.println("Upload is paused");
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                System.out.println("Upload failed");
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                // Handle successful uploads on complete
-                mUploadButton.setText("Upload Success");
-                System.out.println("Upload is successful");
-            }
-        });
+        }).start();
     }
 
     class TranscriptionTask extends AsyncTask<File, Void, String> {
@@ -310,8 +370,10 @@ public class Record extends Fragment {
                 } else {
                     mRecordButton.setText("Record");
                     mPlayButton.setEnabled(true);
+                    while (transcribedText == null) {
+                    }
+                    mResultView.setText(transcribedText);
                 }
-
                 mUploadButton.setText("UPLOAD");
                 mStartRecording = !mStartRecording;
             }
@@ -339,19 +401,26 @@ public class Record extends Fragment {
             public void onClick(View v) {
                 //call playing api
                 uploadRecording();
+                while(mUploadSuccess != true){
+                }
+                mUploadButton.setText("Upload Success");
             }
         });
 
 
-/*
+
         mAnalyzeButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 //call playing api
                 analyzeRecording();
+                while (emotionResult == null) {
+
+                }
+                mResultView.append("\nResult:" + emotionResult);
             }
         });
-*/
+
 
         return view;
     }
