@@ -4,12 +4,12 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "project.ece496.emotionrecogspeechgui"
-        minSdkVersion 15
+        minSdkVersion 17
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-
+        multiDexEnabled true
         buildConfigField 'String', 'Speech2TextUsername', SpeechSentimentsApp_Speech2Text_username
         buildConfigField 'String', 'Speech2TextPassword', SpeechSentimentsApp_Speech2Text_password
     }
@@ -37,6 +37,8 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore:17.1.0'
     implementation 'com.google.firebase:firebase-storage:16.0.2'
     implementation 'com.ibm.watson.developer_cloud:java-sdk:6.3.1'
+    implementation 'com.android.support:multidex:1.0.3'
+
 }
 
 apply plugin: 'com.google.gms.google-services'
