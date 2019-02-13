@@ -1,99 +1,155 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/lib/com.google.android.gms.plus"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/record_frag"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:id="@+id/frag_record"
     tools:context=".Record">
 
+    <!-- TODO: Update blank fragment layout -->
+
     <LinearLayout
+        android:id="@+id/layout1"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentBottom="true"
         android:layout_marginStart="0dp"
-        android:layout_marginLeft="0dp"
         android:layout_marginTop="0dp"
-        android:layout_marginBottom="0dp"
-        android:orientation="vertical">
-
-        <android.support.v7.widget.AppCompatTextView
-            android:id="@+id/display"
-            android:layout_width="match_parent"
-            android:layout_height="303dp"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentTop="true"
-            android:text="Result: "
-            android:textSize="25sp" />
+        android:orientation="horizontal"
+        android:layout_weight="1">
 
         <LinearLayout
-            android:id="@+id/layout1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentTop="true"
-            android:layout_marginStart="0dp"
-            android:layout_marginLeft="0dp"
-            android:layout_marginTop="0dp"
-            android:orientation="horizontal">
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <android.support.v7.widget.AppCompatButton
                 android:id="@+id/record_button"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
+                android:layout_gravity="center"
+                android:background="@drawable/roundbutton"
+                android:drawableStart="@drawable/baseline_record_voice_over_black_24dp"
+                android:paddingLeft="35dip"
+                android:paddingRight="35dip" />
+
+            <android.support.v7.widget.AppCompatTextView
+                android:id="@+id/record_button_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
                 android:layout_weight="1"
-                android:drawableTop="@drawable/baseline_record_voice_over_black_24dp"
                 android:text="Record"
-                android:textAlignment="center"
-                android:textSize="16sp" />
-
-            <android.support.v7.widget.AppCompatButton
-                android:id="@+id/play_button"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-
-                android:layout_weight="1"
-                android:drawableTop="@drawable/baseline_play_arrow_black_24dp"
-                android:text="Play"
-                android:textAlignment="center"
-                android:textSize="16sp" />
+                android:fontFamily="@font/caviar_dreams_bold"
+                android:textSize="25sp" />
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/layout2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentTop="true"
-            android:layout_marginStart="0dp"
-            android:layout_marginLeft="0dp"
-            android:layout_marginTop="0dp"
-            android:orientation="horizontal">
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical"
+            >
+
+            <android.support.v7.widget.AppCompatButton
+                android:id="@+id/play_button"
+                android:layout_gravity="center"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:paddingLeft="35dip"
+                android:paddingRight="35dip"
+                android:layout_weight="1"
+                android:background="@drawable/roundbutton"
+                android:drawableStart="@drawable/baseline_play_arrow_black_24dp"
+                android:textAlignment="center" />
+
+            <android.support.v7.widget.AppCompatTextView
+                android:id="@+id/play_button_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Play"
+                android:layout_gravity="center"
+                android:textAlignment="center"
+                android:fontFamily="@font/caviar_dreams_bold"
+                android:textSize="25sp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="0dp"
+        android:orientation="horizontal"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <android.support.v7.widget.AppCompatButton
                 android:id="@+id/upload_button"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
+                android:paddingLeft="35dip"
+                android:paddingRight="35dip"
+                android:layout_gravity="center"
                 android:layout_weight="1"
-                android:drawableTop="@drawable/baseline_cloud_upload_black_24dp"
-                android:text="UPLOAD"
-                android:textSize="16sp" />
+                android:background="@drawable/roundbutton"
+                android:drawableStart="@drawable/baseline_cloud_upload_black_24dp"
+                android:textAlignment="center" />
+
+            <android.support.v7.widget.AppCompatTextView
+                android:id="@+id/upload_button_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:text="Upload"
+                android:fontFamily="@font/caviar_dreams_bold"
+                android:textSize="25sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical"
+            >
 
             <android.support.v7.widget.AppCompatButton
                 android:id="@+id/analyze_button"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
+                android:paddingLeft="35dip"
+                android:paddingRight="35dip"
                 android:layout_weight="1"
-                android:drawableTop="@drawable/twotone_insert_comment_black_24dp"
-                android:text="ANALYZE"
-                android:textSize="16sp" />
+                android:layout_gravity="center"
+                android:background="@drawable/roundbutton"
+                android:drawableStart="@drawable/twotone_insert_comment_black_24dp" />
+
+            <android.support.v7.widget.AppCompatTextView
+                android:id="@+id/analyze_button_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Analyze"
+                android:layout_gravity="center"
+                android:textAlignment="center"
+                android:fontFamily="@font/caviar_dreams_bold"
+                android:textSize="25sp" />
         </LinearLayout>
 
     </LinearLayout>
-
-</RelativeLayout>
+</LinearLayout>

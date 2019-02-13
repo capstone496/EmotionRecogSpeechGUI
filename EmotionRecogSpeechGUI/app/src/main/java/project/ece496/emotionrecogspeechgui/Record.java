@@ -1,66 +1,36 @@
 package project.ece496.emotionrecogspeechgui;
 
 
-import android.content.Intent;
+import android.app.Activity;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.speech.RecognitionListener;
-import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.AppCompatTextView;
+import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.support.v7.widget.AppCompatButton;
 import android.view.View;
 import android.view.ViewGroup;
 import android.util.Log;
+import android.widget.TextView;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.String;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.net.Uri;
-import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
-import android.widget.ImageView;
-import android.widget.Toast;
 
-import com.google.android.gms.tasks.Continuation;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnPausedListener;
-import com.google.firebase.storage.OnProgressListener;
-import com.google.firebase.storage.StorageException;
-import com.google.firebase.storage.StorageMetadata;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.UUID;
-
-import static android.app.Activity.RESULT_OK;
 
 
 public class Record extends Fragment {
@@ -77,7 +47,7 @@ public class Record extends Fragment {
     private String mParam1;
     private String mParam2;
     private AppCompatButton mRecordButton, mPlayButton, mUploadButton, mAnalyzeButton;
-    private AppCompatTextView mResultView;
+    private AppCompatTextView mRecordButtonText, mPlayButtonText, mUploadButtonText, mResultView;
     private AudioRecorder mRecorder = null;
     private MediaPlayer mPlayer = null;
     private static String mFileName = null;
@@ -97,7 +67,7 @@ public class Record extends Fragment {
     private DataOutputStream dataOutputStream = null;
     private String transcribedText;
     private String emotionResult;
-    //private OnFragmentInteractionListener mListener;
+    public Communicator comm;
 
     public Record() {
         // Required empty public constructor
@@ -126,8 +96,9 @@ public class Record extends Fragment {
             public void onCompletion(MediaPlayer mp) {
                 mPlayer.release();
                 mPlayer = null;
-                mPlayButton.setText("Play");
+                mPlayButtonText.setText("Play");
                 mRecordButton.setEnabled(true);
+                mUploadButton.setEnabled(true);
                 mStartPlaying = !mStartPlaying;
             }
         });
@@ -158,16 +129,16 @@ public class Record extends Fragment {
 
         transcribedText = null;
         transcriber = new WatsonSpeechTranscriber();
-        //new TranscriptionTask().execute(new File(mFileName));
         new Thread(new Runnable() {
             @Override
             public void run() {
-                transcribedText =  transcriber.transcribe(new File(mFileName));
+                //new TranscriptionTask().execute(new File(mFileName));
+                transcribedText = transcriber.transcribe(new File(mFileName));
             }
         }).start();
 
-        Log.d("Stop recording", "trying to transcribe");
     }
+
     private void analyzeRecording() {
         emotionResult= null;
         new Thread(new Runnable() {
@@ -194,10 +165,7 @@ public class Record extends Fragment {
                     e.printStackTrace();
                 }
             }
-
         }).start();
-
-        //System.out.println(emotionResult);
 
     }
 
@@ -265,77 +233,22 @@ public class Record extends Fragment {
     }
 
     class TranscriptionTask extends AsyncTask<File, Void, String> {
-
         @Override
-
         protected String doInBackground(File... files) {
-
             transcriber = new WatsonSpeechTranscriber();
-
             return transcriber.transcribe(files[0]);
-
         }
 
-
-
         @Override
-
         protected void onPostExecute(String s) {
-
             // TODO: spaghetti code here...
             mResultView.setText(s);
-
         }
 
     }
 
-/*
-    private void analyzeRecording() {
-        // Attach a listener to read the data at our posts reference
-        ref.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                EmotionResult emotionResult = dataSnapshot.getValue(EmotionResult.class);
-                String emoStr = "";
-                int max = 0;
-                for(int i = 1; i < emotionResult.emotion.length; i ++) {
-                    if (emotionResult.emotion[max] < emotionResult.emotion[i]) {
-                        max = i;
-                    }
-                }
-                switch (max) {
-                    case 0:
-                        emoStr = "happy";
-                        break;
-                    case 1:
-                        emoStr = "sad";
-                        break;
-                    case 2:
-                        emoStr = "angry";
-                        break;
-                    case 3:
-                        emoStr = "fearful";
-                        break;
-                    case 4:
-                        emoStr = "disgust";
-                        break;
-                    case 5:
-                        emoStr = "surprise";
-                        break;
-                    default:
-                        break;
-                }
-                mResultView.setText("Result:\n"+emoStr);
-                //System.out.println(emotionResult);
-            }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                //System.out.println("The read failed: " + databaseError.getCode());
-            }
-        });
-    }*/
-@Override
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         main = (MainActivity)getActivity();
@@ -343,20 +256,26 @@ public class Record extends Fragment {
         speech = SpeechRecognizer.createSpeechRecognizer(getActivity());
         //database = FirebaseDatabase.getInstance();
         //ref = database.getReference("/results/emotionResult");
-
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_record, container, false);
-        mRecordButton = (AppCompatButton) view.findViewById(R.id.record_button);
-        mPlayButton = (AppCompatButton) view.findViewById(R.id.play_button);
-        mUploadButton = (AppCompatButton) view.findViewById(R.id.upload_button);
-        mAnalyzeButton = (AppCompatButton) view.findViewById(R.id.analyze_button);
-        mResultView = (AppCompatTextView) view.findViewById(R.id.display);
+        return inflater.inflate(R.layout.fragment_record, container, false);
+    }
 
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        mRecordButton = (AppCompatButton) getActivity().findViewById(R.id.record_button);
+        mPlayButton = (AppCompatButton) getActivity().findViewById(R.id.play_button);
+        mUploadButton = (AppCompatButton) getActivity().findViewById(R.id.upload_button);
+        mAnalyzeButton = (AppCompatButton) getActivity().findViewById(R.id.analyze_button);
+        mRecordButtonText = (AppCompatTextView) getActivity().findViewById(R.id.record_button_text);
+        mPlayButtonText = (AppCompatTextView) getActivity().findViewById(R.id.play_button_text);
+        mUploadButtonText = (AppCompatTextView) getActivity().findViewById(R.id.upload_button_text);
+        comm = (Communicator)getActivity();
 
         mRecordButton.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -364,18 +283,28 @@ public class Record extends Fragment {
                 //call recording api
                 onRecord(mStartRecording);
                 if (mStartRecording) {
-                    mRecordButton.setText("Stop");
+                    mRecordButtonText.setText("Stop");
                     mPlayButton.setEnabled(false);
-
+                    mUploadButton.setEnabled(false);
                 } else {
-                    mRecordButton.setText("Record");
+                    mRecordButtonText.setText("Record");
+                    //Log.e(LOG_TAG, "calling comm in record");
                     mPlayButton.setEnabled(true);
+                    mUploadButton.setEnabled(true);
                     while (transcribedText == null) {
                     }
-                    mResultView.setText(transcribedText);
+/*
+                    transcribedText = "Marginal cost is the additional (incremental) cost required to increase" +
+                            "the quantity of  output by one unit. it is the derivative of the cost function with" +
+                            "respect to the output quantity. Marginal and average cost values corresponding to " +
+                            "a specified output quantity are generally different. If the marginal cost is smaller" +
+                            "than the average cost, an increase in output would result in a reduction of unit cost.";
+*/
+                    comm.updateTransription(transcribedText);
                 }
                 mUploadButton.setText("UPLOAD");
                 mStartRecording = !mStartRecording;
+                //Log.e(LOG_TAG, "calling comm in record");
             }
         });
 
@@ -385,11 +314,15 @@ public class Record extends Fragment {
                 //call playing api
                 onPlay(mStartPlaying);
                 if (mStartPlaying) {
-                    mPlayButton.setText("Stop");
+                    mPlayButtonText.setText("Stop");
                     mRecordButton.setEnabled(false);
+                    mUploadButton.setEnabled(false);
+
                 } else {
-                    mPlayButton.setText("Play");
+                    mPlayButtonText.setText("Play");
                     mRecordButton.setEnabled(true);
+                    mUploadButton.setEnabled(true);
+
                 }
                 mStartPlaying = !mStartPlaying;
 
@@ -401,12 +334,11 @@ public class Record extends Fragment {
             public void onClick(View v) {
                 //call playing api
                 uploadRecording();
-                while(mUploadSuccess != true){
+                while(!mUploadSuccess){
                 }
-                mUploadButton.setText("Upload Success");
+                mUploadButtonText.setText("Upload Success");
             }
         });
-
 
 
         mAnalyzeButton.setOnClickListener(new View.OnClickListener(){
@@ -415,14 +347,10 @@ public class Record extends Fragment {
                 //call playing api
                 analyzeRecording();
                 while (emotionResult == null) {
-
                 }
-                mResultView.append("\nResult:" + emotionResult);
+                comm.updateResult(emotionResult);
             }
         });
-
-
-        return view;
     }
 
 }

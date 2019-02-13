@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimary">#FF0081FF</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
-
     <color name="white">#FFFFFF</color>
+    <color name="emoji_yellow">#F3E88A</color>
     <color name="white_transparent">#80FFFFFF</color>
+    <color name="color_disabled">#8C8D92</color>
+    <color name="black">#000000</color>
+    <color name="button_primary">#FFAED7FF</color>
+    <color name="nav_bg">#FFCFC6C6</color>
+    <color name="button_yellow">#FFF3E88A</color>
 </resources>
