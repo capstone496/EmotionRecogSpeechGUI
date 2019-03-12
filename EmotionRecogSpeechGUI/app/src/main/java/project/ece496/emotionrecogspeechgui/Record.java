@@ -1,13 +1,17 @@
 package project.ece496.emotionrecogspeechgui;
 
-
+import project.ece496.emotionrecogspeechgui.MainActivity;
 import android.app.Activity;
+import android.database.Cursor;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.speech.SpeechRecognizer;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.AppCompatTextView;
+import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.support.v7.widget.AppCompatButton;
@@ -15,7 +19,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.util.Log;
 import android.widget.TextView;
-
+import android.widget.Toast;
+import android.content.Intent;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -26,11 +31,32 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.google.gson.Gson;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.UUID;
+
+
+import retrofit.model.User;
+import retrofit.model.ResultObject;
+import retrofit.service.UserClient;
+import retrofit.service.AudioInterface;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.Call;
+import retrofit2.converter.gson.GsonConverterFactory;
+import pub.devrel.easypermissions.EasyPermissions;
+import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 
 public class Record extends Fragment {
@@ -68,6 +94,12 @@ public class Record extends Fragment {
     private String transcribedText;
     private String emotionResult;
     public Communicator comm;
+
+    private Uri uri;
+    private String pathToStoredAudio;
+
+
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     public Record() {
         // Required empty public constructor
@@ -132,8 +164,8 @@ public class Record extends Fragment {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                //new TranscriptionTask().execute(new File(mFileName));
-                transcribedText = transcriber.transcribe(new File(mFileName));
+//                new TranscriptionTask().execute(new File(mFileName)); // not sure what the difference is
+//                transcribedText = transcriber.transcribe(new File(mFileName));
             }
         }).start();
 
@@ -144,32 +176,45 @@ public class Record extends Fragment {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    client = new Socket("100.65.194.121", 7012); //connect to server
-                    dataInputStream = new DataInputStream(client.getInputStream());
-                    byte[] received = new byte[1024];
-                    while (dataInputStream.read(received) == -1) {
 
-                    }
-                    emotionResult = new String(received);
-                    for (int i = 0; i < 1024; i ++) {
-                        if (emotionResult.charAt(i) == '.') {
-                            emotionResult = emotionResult.substring(0, i);
-                            break;
-                        }
-                    }
-                    System.out.println(emotionResult);
-                } catch (UnknownHostException e){
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+
+
+
+//                try {
+//                    client = new Socket("100.65.194.121", 7012); //connect to server
+//                    dataInputStream = new DataInputStream(client.getInputStream());
+//                    byte[] received = new byte[1024];
+//                    while (dataInputStream.read(received) == -1) {
+//
+//                    }
+//                    emotionResult = new String(received);
+//                    for (int i = 0; i < 1024; i ++) {
+//                        if (emotionResult.charAt(i) == '.') {
+//                            emotionResult = emotionResult.substring(0, i);
+//                            break;
+//                        }
+//                    }
+//                    System.out.println(emotionResult);
+//                } catch (UnknownHostException e){
+//                    e.printStackTrace();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
             }
         }).start();
 
     }
 
     private void uploadRecording(){
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                uploadAudioToServer();
+            }
+        }).start();
+
+        /*
         file = new File(mFileName);
         new Thread(new Runnable() {
             @Override
@@ -230,6 +275,7 @@ public class Record extends Fragment {
                 }
             }
         }).start();
+        */
     }
 
     class TranscriptionTask extends AsyncTask<File, Void, String> {
@@ -291,8 +337,8 @@ public class Record extends Fragment {
                     //Log.e(LOG_TAG, "calling comm in record");
                     mPlayButton.setEnabled(true);
                     mUploadButton.setEnabled(true);
-                    while (transcribedText == null) {
-                    }
+//                    while (transcribedText == null) {
+                   // }
 /*
                     transcribedText = "Marginal cost is the additional (incremental) cost required to increase" +
                             "the quantity of  output by one unit. it is the derivative of the cost function with" +
@@ -304,7 +350,7 @@ public class Record extends Fragment {
                 }
                 mUploadButton.setText("UPLOAD");
                 mStartRecording = !mStartRecording;
-                //Log.e(LOG_TAG, "calling comm in record");
+                Log.e(LOG_TAG, "calling comm in record");
             }
         });
 
@@ -352,5 +398,55 @@ public class Record extends Fragment {
             }
         });
     }
+
+
+    //https://inducesmile.com/android/android-record-and-upload-video-to-server-using-retrofit-2/
+    private void uploadAudioToServer() {
+        //Intent myIntent = new Intent(this, MainActivity.class);
+        File audioFile = new File(mFileName);
+        RequestBody audioBody = RequestBody.create(MediaType.parse("audio/*"), audioFile);
+
+        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        OkHttpClient client = new OkHttpClient.Builder().addInterceptor(interceptor).build();
+        MultipartBody.Part aFile = MultipartBody.Part.createFormData("file", audioFile.getName(), audioBody);
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://100.65.68.23:5000")
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(client)
+                .build();
+        Log.e("upload audio to server", "before enqueue");
+
+        AudioInterface aInterface = retrofit.create(AudioInterface.class);
+        Call<ResponseBody>  serverCom = aInterface.uploadAudioToServer(aFile);
+        Log.e("upload audio to server", "upload success");
+
+        serverCom.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                Log.d(TAG, "getting a response...");
+                String result = response.body().toString();
+                Log.e(TAG, "Result " + result);
+            }
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.d(TAG, "Error message " + t.getMessage());
+            }
+        });
+    }
+
+    private String getRealPathFromURIPath(Uri contentURI, Activity activity) {
+        Cursor cursor = activity.getContentResolver().query(contentURI, null, null, null, null);
+        if (cursor == null) {
+            return contentURI.getPath();
+        } else {
+            cursor.moveToFirst();
+            int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+            return cursor.getString(idx);
+        }
+    }
+
+
+
 
 }
