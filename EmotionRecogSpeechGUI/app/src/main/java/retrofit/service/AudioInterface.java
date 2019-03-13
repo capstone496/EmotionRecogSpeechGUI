@@ -14,5 +14,5 @@ public interface AudioInterface {
     @Multipart
     @POST("api/predict") //index.php
     // @POST("/imagefolder/index.php")
-    Call<ResponseBody> uploadAudioToServer(@Part MultipartBody.Part audio);
+    Call<ResultObject> uploadAudioToServer(@Part MultipartBody.Part audio);
 }

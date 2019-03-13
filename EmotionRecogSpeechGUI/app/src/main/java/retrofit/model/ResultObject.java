@@ -17,4 +17,9 @@ public class ResultObject {
         this.predictedEmotion = predictedEmotion;
     }
 
+    @Override
+    public String toString(){
+        return this.predictedEmotion;
+    }
+
 }

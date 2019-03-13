@@ -379,10 +379,12 @@ public class Record extends Fragment {
             @Override
             public void onClick(View v) {
                 //call playing api
-                uploadRecording();
-                while(!mUploadSuccess){
-                }
+//                uploadRecording();
+                uploadAudioToServer();
                 mUploadButtonText.setText("Upload Success");
+//                while (emotionResult == null) {
+//                }
+                //comm.updateResult(emotionResult);
             }
         });
 
@@ -391,7 +393,7 @@ public class Record extends Fragment {
             @Override
             public void onClick(View v) {
                 //call playing api
-                analyzeRecording();
+                //analyzeRecording();
                 while (emotionResult == null) {
                 }
                 comm.updateResult(emotionResult);
@@ -411,25 +413,29 @@ public class Record extends Fragment {
         OkHttpClient client = new OkHttpClient.Builder().addInterceptor(interceptor).build();
         MultipartBody.Part aFile = MultipartBody.Part.createFormData("file", audioFile.getName(), audioBody);
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://100.65.68.23:5000")
+                .baseUrl("http://10.0.2.2:5000")
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(client)
                 .build();
         Log.e("upload audio to server", "before enqueue");
 
         AudioInterface aInterface = retrofit.create(AudioInterface.class);
-        Call<ResponseBody>  serverCom = aInterface.uploadAudioToServer(aFile);
+        Call<ResultObject>  serverCom = aInterface.uploadAudioToServer(aFile);
         Log.e("upload audio to server", "upload success");
 
-        serverCom.enqueue(new Callback<ResponseBody>() {
+
+        //add delay
+        serverCom.enqueue(new Callback<ResultObject>() {
             @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+            public void onResponse(Call<ResultObject> call, Response<ResultObject> response) {
                 Log.d(TAG, "getting a response...");
-                String result = response.body().toString();
-                Log.e(TAG, "Result " + result);
+                //String result = response.body().toString();
+                emotionResult = response.body().toString();
+                Log.e(TAG, "Result " + emotionResult);
+                comm.updateResult(emotionResult);
             }
             @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
+            public void onFailure(Call<ResultObject> call, Throwable t) {
                 Log.d(TAG, "Error message " + t.getMessage());
             }
         });
