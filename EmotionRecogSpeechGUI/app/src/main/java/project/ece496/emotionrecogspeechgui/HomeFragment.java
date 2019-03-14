@@ -1,10 +1,14 @@
 package project.ece496.emotionrecogspeechgui;
 
 
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.AppCompatTextView;
+import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.method.ScrollingMovementMethod;
+import android.text.style.RelativeSizeSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,7 +49,6 @@ public class HomeFragment extends Fragment {
     }
 
     public void updateResultView(String result) {
-        mResultView.setText("Result: \n" + result + "\n");
         String emoji = "";
         switch (result) {
             case "happy":
@@ -69,10 +72,19 @@ public class HomeFragment extends Fragment {
             default:
                 break;
         }
-        //mResultView.setMovementMethod(new ScrollingMovementMethod());
-        mResultView.setTextSize(50);
+        String text = "second";
+
+        SpannableString emoji_span = new SpannableString(emoji);
+        SpannableString text_span = new SpannableString(result);
+        emoji_span.setSpan(new RelativeSizeSpan(4f), 0,emoji.length(), 0);
+        text_span.setSpan(new RelativeSizeSpan(1f), 0,result.length(), 0);
+
         mResultView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        mResultView.append(emoji);
+        mResultView.setText( emoji_span );
+        mResultView.append("\n");
+        mResultView.append( text_span );
+
+
     }
 
 }

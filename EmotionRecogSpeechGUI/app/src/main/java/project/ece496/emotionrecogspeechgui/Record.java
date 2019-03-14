@@ -1,62 +1,43 @@
 package project.ece496.emotionrecogspeechgui;
 
-import project.ece496.emotionrecogspeechgui.MainActivity;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.database.Cursor;
+
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.speech.SpeechRecognizer;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.AppCompatTextView;
-import android.text.TextUtils;
-import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.support.v7.widget.AppCompatButton;
 import android.view.View;
 import android.view.ViewGroup;
 import android.util.Log;
-import android.widget.TextView;
-import android.widget.Toast;
-import android.content.Intent;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.String;
 
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
-import com.google.gson.Gson;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.UUID;
 
 
-import retrofit.model.User;
 import retrofit.model.ResultObject;
-import retrofit.service.UserClient;
 import retrofit.service.AudioInterface;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.Call;
 import retrofit2.converter.gson.GsonConverterFactory;
-import pub.devrel.easypermissions.EasyPermissions;
-import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 
 public class Record extends Fragment {
@@ -72,32 +53,18 @@ public class Record extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
-    private AppCompatButton mRecordButton, mPlayButton, mUploadButton, mAnalyzeButton;
-    private AppCompatTextView mRecordButtonText, mPlayButtonText, mUploadButtonText, mResultView;
+    private AppCompatButton mRecordButton, mPlayButton, mUploadButton;
+    private AppCompatTextView mRecordButtonText, mPlayButtonText, mUploadButtonText;
     private AudioRecorder mRecorder = null;
     private MediaPlayer mPlayer = null;
     private static String mFileName = null;
-    boolean mStartPlaying = true, mStartRecording = true, mUploadSuccess = false;
+    boolean mStartPlaying = true, mStartRecording = true;
     private MainActivity main;
-    private File file;
-    private FirebaseStorage storage;
-    private StorageReference riversRef, storageRef;
-    private UploadTask uploadTask;
-    // Get a reference to our posts
-    private FirebaseDatabase database;
-    private DatabaseReference ref;
-    private SpeechRecognizer speech;
+    private ProgressDialog dialog, analyzeDialog;
+    private AlertDialog.Builder analyze_success_dialog;
     private WatsonSpeechTranscriber transcriber;
-    private Socket client;
-    private DataInputStream dataInputStream = null;
-    private DataOutputStream dataOutputStream = null;
-    private String transcribedText;
-    private String emotionResult;
+    private String transcribedText, emotionResult;
     public Communicator comm;
-
-    private Uri uri;
-    private String pathToStoredAudio;
-
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -164,144 +131,17 @@ public class Record extends Fragment {
         new Thread(new Runnable() {
             @Override
             public void run() {
-//                new TranscriptionTask().execute(new File(mFileName)); // not sure what the difference is
-//                transcribedText = transcriber.transcribe(new File(mFileName));
+                transcribedText = transcriber.transcribe(new File(mFileName));
+                comm.updateTransription(transcribedText);
+                dialog.dismiss();
             }
         }).start();
-
     }
-
-    private void analyzeRecording() {
-        emotionResult= null;
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-
-
-
-//                try {
-//                    client = new Socket("100.65.194.121", 7012); //connect to server
-//                    dataInputStream = new DataInputStream(client.getInputStream());
-//                    byte[] received = new byte[1024];
-//                    while (dataInputStream.read(received) == -1) {
-//
-//                    }
-//                    emotionResult = new String(received);
-//                    for (int i = 0; i < 1024; i ++) {
-//                        if (emotionResult.charAt(i) == '.') {
-//                            emotionResult = emotionResult.substring(0, i);
-//                            break;
-//                        }
-//                    }
-//                    System.out.println(emotionResult);
-//                } catch (UnknownHostException e){
-//                    e.printStackTrace();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-            }
-        }).start();
-
-    }
-
-    private void uploadRecording(){
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                uploadAudioToServer();
-            }
-        }).start();
-
-        /*
-        file = new File(mFileName);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try
-                {
-                    client = new Socket("100.65.194.121", 7012); //connect to server
-                    dataOutputStream = new DataOutputStream(client.getOutputStream());
-                    dataInputStream = new DataInputStream(client.getInputStream());
-                    String s;
-                    while (transcribedText == null) {
-                    }
-                    byte[] received = new byte[2];
-                    dataOutputStream.writeBytes("2");
-                    dataOutputStream.flush();
-
-                    while (dataInputStream.read(received) == -1){
-                    }
-                    s = new String(received);
-                    System.out.println(s);
-
-                    dataOutputStream.writeUTF(transcribedText+ "\n");
-                    dataOutputStream.flush();
-
-                    while (dataInputStream.read(received) == -1) {
-                    }
-                    s = new String(received);
-                    System.out.println(s);
-
-                    if(file.isFile()) {
-                        dataOutputStream.writeBytes("1");
-                        dataOutputStream.flush();
-
-                        while (dataInputStream.read(received) == -1) {
-                        }
-                        s = new String(received);
-                        System.out.println(s);
-
-                        FileInputStream fileInputStream = new FileInputStream(file);
-                        byte[] buf = new byte[1024];
-                        int readSuccess = fileInputStream.read(buf,0,1024);
-
-                        while(readSuccess != -1) {
-                            dataOutputStream.write(buf, 0, 1024);
-                            dataOutputStream.flush();
-                            readSuccess = fileInputStream.read(buf,0,1024);
-                        }
-                        fileInputStream.close();
-                    }
-                    mUploadSuccess = true;
-                    dataOutputStream.close();
-                    dataInputStream.close();
-                    client.close();
-                } catch (UnknownHostException e){
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-        */
-    }
-
-    class TranscriptionTask extends AsyncTask<File, Void, String> {
-        @Override
-        protected String doInBackground(File... files) {
-            transcriber = new WatsonSpeechTranscriber();
-            return transcriber.transcribe(files[0]);
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            // TODO: spaghetti code here...
-            mResultView.setText(s);
-        }
-
-    }
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         main = (MainActivity)getActivity();
-        storage = FirebaseStorage.getInstance();
-        speech = SpeechRecognizer.createSpeechRecognizer(getActivity());
-        //database = FirebaseDatabase.getInstance();
-        //ref = database.getReference("/results/emotionResult");
     }
 
     @Override
@@ -317,10 +157,12 @@ public class Record extends Fragment {
         mRecordButton = (AppCompatButton) getActivity().findViewById(R.id.record_button);
         mPlayButton = (AppCompatButton) getActivity().findViewById(R.id.play_button);
         mUploadButton = (AppCompatButton) getActivity().findViewById(R.id.upload_button);
-        mAnalyzeButton = (AppCompatButton) getActivity().findViewById(R.id.analyze_button);
         mRecordButtonText = (AppCompatTextView) getActivity().findViewById(R.id.record_button_text);
         mPlayButtonText = (AppCompatTextView) getActivity().findViewById(R.id.play_button_text);
         mUploadButtonText = (AppCompatTextView) getActivity().findViewById(R.id.upload_button_text);
+        dialog = new ProgressDialog(getActivity()); // this = YourActivity
+        analyzeDialog = new ProgressDialog(getActivity());
+        analyze_success_dialog = new AlertDialog.Builder(getActivity());
         comm = (Communicator)getActivity();
 
         mRecordButton.setOnClickListener(new View.OnClickListener(){
@@ -337,18 +179,13 @@ public class Record extends Fragment {
                     //Log.e(LOG_TAG, "calling comm in record");
                     mPlayButton.setEnabled(true);
                     mUploadButton.setEnabled(true);
-//                    while (transcribedText == null) {
-                   // }
-/*
-                    transcribedText = "Marginal cost is the additional (incremental) cost required to increase" +
-                            "the quantity of  output by one unit. it is the derivative of the cost function with" +
-                            "respect to the output quantity. Marginal and average cost values corresponding to " +
-                            "a specified output quantity are generally different. If the marginal cost is smaller" +
-                            "than the average cost, an increase in output would result in a reduction of unit cost.";
-*/
-                    comm.updateTransription(transcribedText);
+                    dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                    dialog.setTitle("Transcribing");
+                    dialog.setMessage("Please wait...");
+                    dialog.setIndeterminate(true);
+                    dialog.setCanceledOnTouchOutside(false);
+                    dialog.show();
                 }
-                mUploadButton.setText("UPLOAD");
                 mStartRecording = !mStartRecording;
                 Log.e(LOG_TAG, "calling comm in record");
             }
@@ -378,27 +215,24 @@ public class Record extends Fragment {
         mUploadButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                //call playing api
-//                uploadRecording();
-                uploadAudioToServer();
-                mUploadButtonText.setText("Upload Success");
-//                while (emotionResult == null) {
-//                }
-                //comm.updateResult(emotionResult);
-            }
-        });
+                analyzeDialog.setTitle("Analyzing");
+                analyzeDialog.setMessage("Please wait...");
+                analyzeDialog.setIndeterminate(true);
+                analyzeDialog.setCanceledOnTouchOutside(false);
+                analyzeDialog.show();
 
-
-        mAnalyzeButton.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                //call playing api
-                //analyzeRecording();
-                while (emotionResult == null) {
-                }
+                //uploadAudioToServer();
+                emotionResult = "happy";
                 comm.updateResult(emotionResult);
+                analyzeDialog.dismiss();
+
+                //add a pop up window
+                analyze_success_dialog.setTitle("Analyze Success");
+                analyze_success_dialog.setMessage("Please view results!");
+                analyze_success_dialog.show();
             }
         });
+
     }
 
 
@@ -423,8 +257,6 @@ public class Record extends Fragment {
         Call<ResultObject>  serverCom = aInterface.uploadAudioToServer(aFile);
         Log.e("upload audio to server", "upload success");
 
-
-        //add delay
         serverCom.enqueue(new Callback<ResultObject>() {
             @Override
             public void onResponse(Call<ResultObject> call, Response<ResultObject> response) {
@@ -433,6 +265,7 @@ public class Record extends Fragment {
                 emotionResult = response.body().toString();
                 Log.e(TAG, "Result " + emotionResult);
                 comm.updateResult(emotionResult);
+                analyzeDialog.dismiss();
             }
             @Override
             public void onFailure(Call<ResultObject> call, Throwable t) {
@@ -456,3 +289,4 @@ public class Record extends Fragment {
 
 
 }
+

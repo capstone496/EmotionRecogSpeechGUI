@@ -16,8 +16,8 @@
         android:layout_height="match_parent"
         android:layout_marginStart="0dp"
         android:layout_marginTop="0dp"
-        android:orientation="horizontal"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:orientation="horizontal">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -28,13 +28,13 @@
 
             <android.support.v7.widget.AppCompatButton
                 android:id="@+id/record_button"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
                 android:layout_gravity="center"
                 android:background="@drawable/roundbutton"
-                android:drawableStart="@drawable/baseline_record_voice_over_black_24dp"
-                android:paddingLeft="35dip"
-                android:paddingRight="35dip" />
+                android:drawableStart="@drawable/baseline_record_voice_over_black_48dp"
+                android:paddingLeft="50dip"
+                android:paddingRight="50dip" />
 
             <android.support.v7.widget.AppCompatTextView
                 android:id="@+id/record_button_text"
@@ -42,114 +42,83 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_weight="1"
+                android:fontFamily="@font/caviar_dreams_bold"
                 android:text="Record"
-                android:fontFamily="@font/caviar_dreams_bold"
-                android:textSize="25sp" />
-        </LinearLayout>
+                android:textSize="30sp" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:layout_gravity="center_vertical"
-            >
-
-            <android.support.v7.widget.AppCompatButton
-                android:id="@+id/play_button"
-                android:layout_gravity="center"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:paddingLeft="35dip"
-                android:paddingRight="35dip"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="200dip"
+                android:layout_marginStart="0dp"
+                android:layout_marginTop="0dp"
                 android:layout_weight="1"
-                android:background="@drawable/roundbutton"
-                android:drawableStart="@drawable/baseline_play_arrow_black_24dp"
-                android:textAlignment="center" />
+                android:orientation="horizontal">
 
-            <android.support.v7.widget.AppCompatTextView
-                android:id="@+id/play_button_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Play"
-                android:layout_gravity="center"
-                android:textAlignment="center"
-                android:fontFamily="@font/caviar_dreams_bold"
-                android:textSize="25sp"/>
-        </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
-    </LinearLayout>
+                    <android.support.v7.widget.AppCompatButton
+                        android:id="@+id/play_button"
+                        android:layout_width="75dp"
+                        android:layout_height="75dp"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:background="@drawable/roundbutton"
+                        android:drawableStart="@drawable/baseline_play_arrow_black_24dp"
+                        android:paddingLeft="23dip"
+                        android:paddingRight="23dip"
+                        android:textAlignment="center" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginStart="0dp"
-        android:layout_marginTop="0dp"
-        android:orientation="horizontal"
-        android:layout_weight="1">
+                    <android.support.v7.widget.AppCompatTextView
+                        android:id="@+id/play_button_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/caviar_dreams_bold"
+                        android:text="Play"
+                        android:textAlignment="center"
+                        android:textSize="25sp" />
+                </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="1"
-            android:orientation="vertical">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
-            <android.support.v7.widget.AppCompatButton
-                android:id="@+id/upload_button"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:paddingLeft="35dip"
-                android:paddingRight="35dip"
-                android:layout_gravity="center"
-                android:layout_weight="1"
-                android:background="@drawable/roundbutton"
-                android:drawableStart="@drawable/baseline_cloud_upload_black_24dp"
-                android:textAlignment="center" />
+                    <android.support.v7.widget.AppCompatButton
+                        android:id="@+id/upload_button"
+                        android:layout_width="75dp"
+                        android:layout_height="75dp"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:background="@drawable/roundbutton"
+                        android:drawableStart="@drawable/twotone_insert_comment_black_24dp"
+                        android:paddingLeft="23dip"
+                        android:paddingRight="23dip"
+                        android:textAlignment="center" />
 
-            <android.support.v7.widget.AppCompatTextView
-                android:id="@+id/upload_button_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_weight="1"
-                android:text="Upload"
-                android:fontFamily="@font/caviar_dreams_bold"
-                android:textSize="25sp" />
+                    <android.support.v7.widget.AppCompatTextView
+                        android:id="@+id/upload_button_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/caviar_dreams_bold"
+                        android:text="Analyze"
+                        android:textSize="25sp" />
 
-        </LinearLayout>
+                </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:layout_gravity="center_vertical"
-            >
-
-            <android.support.v7.widget.AppCompatButton
-                android:id="@+id/analyze_button"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:paddingLeft="35dip"
-                android:paddingRight="35dip"
-                android:layout_weight="1"
-                android:layout_gravity="center"
-                android:background="@drawable/roundbutton"
-                android:drawableStart="@drawable/twotone_insert_comment_black_24dp" />
-
-            <android.support.v7.widget.AppCompatTextView
-                android:id="@+id/analyze_button_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Analyze"
-                android:layout_gravity="center"
-                android:textAlignment="center"
-                android:fontFamily="@font/caviar_dreams_bold"
-                android:textSize="25sp" />
+            </LinearLayout>
         </LinearLayout>
 
     </LinearLayout>
+
 </LinearLayout>
