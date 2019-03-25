@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.AppCompatTextView;
@@ -123,14 +124,14 @@ public class Record extends Fragment {
         mRecorder.stopRecording();
         mRecorder = null;
 
-        transcribedText = null;
+        transcribedText = "";
         transcriber = new WatsonSpeechTranscriber();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 transcribedText = transcriber.transcribe(new File(mFileName));
-                comm.updateTransription(transcribedText);
                 dialog.dismiss();
+                comm.updateTranscription(transcribedText);
             }
         }).start();
     }
@@ -219,6 +220,16 @@ public class Record extends Fragment {
                 analyzeDialog.show();
 
                 uploadAudioToServer();
+
+                new Handler().postDelayed(new Runnable() {
+                    public void run() {
+                        analyzeDialog.dismiss();
+                        analyze_success_dialog.setTitle("Timed out");
+                        analyze_success_dialog.setMessage("Please try analyze again!");
+                        analyze_success_dialog.show();
+                    }
+                }, 10000);
+
                 //emotionResult = "happy";
                 //comm.updateResult(emotionResult);
                 //analyzeDialog.dismiss();
@@ -262,9 +273,9 @@ public class Record extends Fragment {
                 comm.updateResult(emotionResult);
                 analyzeDialog.dismiss();
                 //add a pop up window
-                //analyze_success_dialog.setTitle("Analyze Success");
-                //analyze_success_dialog.setMessage("Please view results!");
-                //analyze_success_dialog.show();
+                analyze_success_dialog.setTitle("Analyze Success");
+                analyze_success_dialog.setMessage("Please view results!");
+                analyze_success_dialog.show();
             }
             @Override
             public void onFailure(Call<ResultObject> call, Throwable t) {

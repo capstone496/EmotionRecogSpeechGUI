@@ -57,7 +57,7 @@ public class MainActivity extends RecorderActivity implements Communicator {
     }
 
     @Override
-    public void updateTransription(String transcribedText){
+    public void updateTranscription(String transcribedText){
         mHomeFragment.updateTranscriptionView(transcribedText);
     }
 
