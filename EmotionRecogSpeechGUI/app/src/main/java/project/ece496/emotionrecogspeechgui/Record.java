@@ -19,9 +19,6 @@ import android.util.Log;
 import java.io.IOException;
 import java.lang.String;
 
-
-import com.google.firebase.storage.FirebaseStorage;
-
 import java.io.File;
 import java.util.UUID;
 
@@ -221,15 +218,13 @@ public class Record extends Fragment {
                 analyzeDialog.setCanceledOnTouchOutside(false);
                 analyzeDialog.show();
 
-                //uploadAudioToServer();
-                emotionResult = "happy";
-                comm.updateResult(emotionResult);
-                analyzeDialog.dismiss();
+                uploadAudioToServer();
+                //emotionResult = "happy";
+                //comm.updateResult(emotionResult);
+                //analyzeDialog.dismiss();
 
-                //add a pop up window
-                analyze_success_dialog.setTitle("Analyze Success");
-                analyze_success_dialog.setMessage("Please view results!");
-                analyze_success_dialog.show();
+
+
             }
         });
 
@@ -247,7 +242,7 @@ public class Record extends Fragment {
         OkHttpClient client = new OkHttpClient.Builder().addInterceptor(interceptor).build();
         MultipartBody.Part aFile = MultipartBody.Part.createFormData("file", audioFile.getName(), audioBody);
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://10.0.2.2:5000")
+                .baseUrl("http://100.64.201.126:5001")
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(client)
                 .build();
@@ -266,6 +261,10 @@ public class Record extends Fragment {
                 Log.e(TAG, "Result " + emotionResult);
                 comm.updateResult(emotionResult);
                 analyzeDialog.dismiss();
+                //add a pop up window
+                //analyze_success_dialog.setTitle("Analyze Success");
+                //analyze_success_dialog.setMessage("Please view results!");
+                //analyze_success_dialog.show();
             }
             @Override
             public void onFailure(Call<ResultObject> call, Throwable t) {
