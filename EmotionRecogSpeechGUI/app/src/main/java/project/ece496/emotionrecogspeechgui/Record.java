@@ -229,22 +229,32 @@ public class Record extends Fragment {
         mUploadButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                analyzeDialog.setTitle("Analyzing");
-                analyzeDialog.setMessage("Please wait...");
-                analyzeDialog.setIndeterminate(true);
-                analyzeDialog.setCanceledOnTouchOutside(false);
-                analyzeDialog.show();
+                if (mFileName != null) {
+                    analyzeDialog.setTitle("Analyzing");
+                    analyzeDialog.setMessage("Please wait...");
+                    analyzeDialog.setIndeterminate(true);
+                    analyzeDialog.setCanceledOnTouchOutside(false);
+                    analyzeDialog.show();
+                    emotionResult = null;
+                    uploadAudioToServer();
 
-                uploadAudioToServer();
-
-                new Handler().postDelayed(new Runnable() {
-                    public void run() {
-                        analyzeDialog.dismiss();
-                        analyze_success_dialog.setTitle("Timed out");
-                        analyze_success_dialog.setMessage("Please try analyze again!");
-                        analyze_success_dialog.show();
-                    }
-                }, 15000);
+                    new Handler().postDelayed(new Runnable() {
+                        public void run() {
+                            if (emotionResult == null) {
+                                analyzeDialog.dismiss();
+                                analyze_success_dialog.setTitle("Timed out");
+                                analyze_success_dialog.setMessage("Please try analyze again!");
+                                analyze_success_dialog.show();
+                                emotionResult = "";
+                                comm.updateResult(emotionResult);
+                            }
+                        }
+                    }, 15000);
+                } else {
+                    analyze_success_dialog.setTitle("Analyze Failed");
+                    analyze_success_dialog.setMessage("Please record first!");
+                    analyze_success_dialog.show();
+                }
 
             }
         });
@@ -254,8 +264,9 @@ public class Record extends Fragment {
 
     //https://inducesmile.com/android/android-record-and-upload-video-to-server-using-retrofit-2/
     private void uploadAudioToServer() {
-        //Intent myIntent = new Intent(this, MainActivity.class);
+
         File audioFile = new File(mFileName);
+
         RequestBody audioBody = RequestBody.create(MediaType.parse("audio/*"), audioFile);
 
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
@@ -263,7 +274,7 @@ public class Record extends Fragment {
         OkHttpClient client = new OkHttpClient.Builder().addInterceptor(interceptor).build();
         MultipartBody.Part aFile = MultipartBody.Part.createFormData("file", audioFile.getName(), audioBody);
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://99.230.99.68:5001")
+                .baseUrl("http://100.65.81.177:5001")
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(client)
                 .build();
@@ -292,6 +303,7 @@ public class Record extends Fragment {
                 Log.d(TAG, "Error message " + t.getMessage());
             }
         });
+
     }
 
     private String getRealPathFromURIPath(Uri contentURI, Activity activity) {

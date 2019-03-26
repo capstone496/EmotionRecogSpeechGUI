@@ -9,6 +9,7 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.RelativeSizeSpan;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -72,14 +73,14 @@ public class HomeFragment extends Fragment {
             default:
                 break;
         }
-        String text = "second";
 
         SpannableString emoji_span = new SpannableString(emoji);
         SpannableString text_span = new SpannableString(result);
-        emoji_span.setSpan(new RelativeSizeSpan(4f), 0,emoji.length(), 0);
+        emoji_span.setSpan(new RelativeSizeSpan(3f), 0,emoji.length(), 0);
         text_span.setSpan(new RelativeSizeSpan(1f), 0,result.length(), 0);
 
         mResultView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        mResultView.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         mResultView.setText( emoji_span );
         mResultView.append("\n");
         mResultView.append( text_span );
