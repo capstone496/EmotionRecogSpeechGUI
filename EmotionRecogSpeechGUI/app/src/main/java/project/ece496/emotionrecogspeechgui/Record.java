@@ -130,8 +130,24 @@ public class Record extends Fragment {
             @Override
             public void run() {
                 transcribedText = transcriber.transcribe(new File(mFileName));
-                dialog.dismiss();
-                comm.updateTranscription(transcribedText);
+
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        dialog.dismiss();
+                        comm.updateTranscription(transcribedText);
+                        if (transcribedText == "") {
+                            analyze_success_dialog.setTitle("Transcription Error");
+                            analyze_success_dialog.setMessage("Please analyze or record again.");
+                            analyze_success_dialog.show();
+                        } else {
+                            analyze_success_dialog.setTitle("Transcription Success");
+                            analyze_success_dialog.setMessage("Please see result from transcription.");
+                            analyze_success_dialog.show();
+                        }
+
+                    }
+                });
             }
         }).start();
     }
@@ -228,13 +244,7 @@ public class Record extends Fragment {
                         analyze_success_dialog.setMessage("Please try analyze again!");
                         analyze_success_dialog.show();
                     }
-                }, 10000);
-
-                //emotionResult = "happy";
-                //comm.updateResult(emotionResult);
-                //analyzeDialog.dismiss();
-
-
+                }, 15000);
 
             }
         });
@@ -253,7 +263,7 @@ public class Record extends Fragment {
         OkHttpClient client = new OkHttpClient.Builder().addInterceptor(interceptor).build();
         MultipartBody.Part aFile = MultipartBody.Part.createFormData("file", audioFile.getName(), audioBody);
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://100.64.201.126:5001")
+                .baseUrl("http://99.230.99.68:5001")
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(client)
                 .build();
@@ -274,7 +284,7 @@ public class Record extends Fragment {
                 analyzeDialog.dismiss();
                 //add a pop up window
                 analyze_success_dialog.setTitle("Analyze Success");
-                analyze_success_dialog.setMessage("Please view results!");
+                analyze_success_dialog.setMessage("Please see result from analysis!");
                 analyze_success_dialog.show();
             }
             @Override
@@ -294,9 +304,6 @@ public class Record extends Fragment {
             return cursor.getString(idx);
         }
     }
-
-
-
 
 }
 
