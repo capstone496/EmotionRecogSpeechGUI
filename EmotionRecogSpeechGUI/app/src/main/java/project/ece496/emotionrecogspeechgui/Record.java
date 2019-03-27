@@ -17,6 +17,8 @@ import android.support.v7.widget.AppCompatButton;
 import android.view.View;
 import android.view.ViewGroup;
 import android.util.Log;
+import android.widget.Toast;
+
 import java.io.IOException;
 import java.lang.String;
 
@@ -49,8 +51,6 @@ public class Record extends Fragment {
     // The URL to +1.  Must be a valid URL.
     private final String PLUS_ONE_URL = "http://developer.android.com";
     // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
     private AppCompatButton mRecordButton, mPlayButton, mUploadButton;
     private AppCompatTextView mRecordButtonText, mPlayButtonText, mUploadButtonText;
     private AudioRecorder mRecorder = null;
@@ -130,7 +130,6 @@ public class Record extends Fragment {
             @Override
             public void run() {
                 transcribedText = transcriber.transcribe(new File(mFileName));
-
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -214,15 +213,12 @@ public class Record extends Fragment {
                     mPlayButtonText.setText("Stop");
                     mRecordButton.setEnabled(false);
                     mUploadButton.setEnabled(false);
-
                 } else {
                     mPlayButtonText.setText("Play");
                     mRecordButton.setEnabled(true);
                     mUploadButton.setEnabled(true);
-
                 }
                 mStartPlaying = !mStartPlaying;
-
             }
         });
 
@@ -237,7 +233,6 @@ public class Record extends Fragment {
                     analyzeDialog.show();
                     emotionResult = null;
                     uploadAudioToServer();
-
                     new Handler().postDelayed(new Runnable() {
                         public void run() {
                             if (emotionResult == null) {
@@ -255,10 +250,8 @@ public class Record extends Fragment {
                     analyze_success_dialog.setMessage("Please record first!");
                     analyze_success_dialog.show();
                 }
-
             }
         });
-
     }
 
 
@@ -274,7 +267,7 @@ public class Record extends Fragment {
         OkHttpClient client = new OkHttpClient.Builder().addInterceptor(interceptor).build();
         MultipartBody.Part aFile = MultipartBody.Part.createFormData("file", audioFile.getName(), audioBody);
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://100.65.81.177:5001")
+                .baseUrl("http://18.224.75.47:7000")
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(client)
                 .build();
@@ -288,15 +281,25 @@ public class Record extends Fragment {
             @Override
             public void onResponse(Call<ResultObject> call, Response<ResultObject> response) {
                 Log.d(TAG, "getting a response...");
-                //String result = response.body().toString();
-                emotionResult = response.body().toString();
-                Log.e(TAG, "Result " + emotionResult);
-                comm.updateResult(emotionResult);
-                analyzeDialog.dismiss();
-                //add a pop up window
-                analyze_success_dialog.setTitle("Analyze Success");
-                analyze_success_dialog.setMessage("Please see result from analysis!");
-                analyze_success_dialog.show();
+                if (response.isSuccessful()){
+                    emotionResult = response.body().toString();
+                    Log.e(TAG, "Result " + emotionResult);
+                    comm.updateResult(emotionResult);
+                    analyzeDialog.dismiss();
+                    //add a pop up window
+                    analyze_success_dialog.setTitle("Analyze Success");
+                    analyze_success_dialog.setMessage("Please see result from analysis!");
+                    analyze_success_dialog.show();
+                }
+                else {
+                    emotionResult = "";
+                    Log.e(TAG, "Result " + emotionResult);
+                    comm.updateResult(emotionResult);
+                    analyzeDialog.dismiss();
+                    analyze_success_dialog.setTitle("Analyze Failed");
+                    analyze_success_dialog.setMessage("Please record again!");
+                    analyze_success_dialog.show();
+                }
             }
             @Override
             public void onFailure(Call<ResultObject> call, Throwable t) {
